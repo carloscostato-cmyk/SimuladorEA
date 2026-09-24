@@ -1,0 +1,1243 @@
+<title>Simulador EA Fortinet</title>
+<script>(function(){try{var t=localStorage.getItem("simulador-ea-theme")||"dark";document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f9f9f7; --surface:#fcfcfb; --surface-2:#f2f1ec; --surface-3:#eceae3;
+  --ink:#0b0b0b; --ink-2:#52514e; --ink-muted:#898781;
+  --line:#e1e0d9; --line-strong:#c3c2b7;
+  --accent:#a92a24; --accent-strong:#8c221d; --accent-ink:#fffaf9; --accent-soft:#f5e2e0;
+  --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  --phase-mai:#2a78d6; --phase-ea:#eb6834; --phase-sku:#1baf7a;
+  --cmp-red:#c2352f; --cmp-red-soft:#f7e3e1; --cmp-red-ink:#fffaf9;
+  --cmp-blue:#2a5fc2; --cmp-blue-soft:#e2e9f8; --cmp-blue-ink:#fbfcff;
+  --shadow:0 1px 2px rgba(11,11,11,.05), 0 6px 16px -8px rgba(11,11,11,.12);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0d0d0d; --surface:#1a1a19; --surface-2:#212120; --surface-3:#272726;
+    --ink:#ffffff; --ink-2:#c3c2b7; --ink-muted:#8f8d86;
+    --line:#2c2c2a; --line-strong:#3a3a37;
+    --accent:#e2574c; --accent-strong:#ef6a5f; --accent-ink:#1a0a09; --accent-soft:#3a201d;
+    --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#e2574c;
+    --phase-mai:#3987e5; --phase-ea:#d95926; --phase-sku:#199e70;
+    --cmp-red:#e2574c; --cmp-red-soft:#3a201d; --cmp-red-ink:#1a0a09;
+    --cmp-blue:#4d80e0; --cmp-blue-soft:#1c2740; --cmp-blue-ink:#fbfcff;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 20px -8px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0d0d0d; --surface:#1a1a19; --surface-2:#212120; --surface-3:#272726;
+  --ink:#ffffff; --ink-2:#c3c2b7; --ink-muted:#8f8d86;
+  --line:#2c2c2a; --line-strong:#3a3a37;
+  --accent:#e2574c; --accent-strong:#ef6a5f; --accent-ink:#1a0a09; --accent-soft:#3a201d;
+  --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#e2574c;
+  --phase-mai:#3987e5; --phase-ea:#d95926; --phase-sku:#199e70;
+  --cmp-red:#e2574c; --cmp-red-soft:#3a201d; --cmp-red-ink:#1a0a09;
+  --cmp-blue:#4d80e0; --cmp-blue-soft:#1c2740; --cmp-blue-ink:#fbfcff;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 20px -8px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Manrope',system-ui,-apple-system,"Segoe UI",sans-serif;}
+.mono{font-family:'IBM Plex Mono',ui-monospace,'SFMono-Regular',monospace; font-variant-numeric:tabular-nums;}
+h1,h2,h3{margin:0; text-wrap:balance; font-family:'Manrope',system-ui,sans-serif;}
+button{font-family:inherit;}
+.app{max-width:1400px;margin:0 auto;padding:20px 16px 64px;}
+.topbar{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;padding-bottom:18px;border-bottom:1px solid var(--line);margin-bottom:22px;}
+.topbar .brand{display:flex;align-items:center;gap:12px;}
+.topbar .mark{width:38px;height:38px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;flex:none;box-shadow:var(--shadow);}
+.topbar .mark svg{width:20px;height:20px;}
+.topbar h1{font-size:21px;font-weight:800;letter-spacing:-.01em;}
+.topbar .sub{font-size:12.5px;color:var(--ink-2);margin-top:2px;}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:100px;border:1px solid var(--line-strong);color:var(--ink-2);background:var(--surface-2);white-space:nowrap;}
+.badge .dot{width:6px;height:6px;border-radius:50%;background:var(--good);}
+.topbar-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.discount-farol{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:800;padding:7px 13px;border-radius:100px;white-space:nowrap;border:1px solid transparent;cursor:pointer;user-select:none;transition:filter .15s;}
+.discount-farol:hover,.discount-farol:focus-visible{filter:brightness(1.18);}
+.discount-farol:focus-visible{outline:2px solid currentColor;outline-offset:2px;}
+.discount-farol .df-dot{width:9px;height:9px;border-radius:50%;flex:none;box-shadow:0 0 0 3px currentColor;opacity:.9;}
+.discount-farol .df-toggle{opacity:.55;font-size:12px;margin-left:1px;}
+.discount-farol.ok{background:color-mix(in srgb, var(--good) 18%, transparent);color:var(--good);border-color:color-mix(in srgb, var(--good) 35%, transparent);}
+.discount-farol.alert{background:color-mix(in srgb, var(--critical) 18%, transparent);color:var(--critical);border-color:color-mix(in srgb, var(--critical) 35%, transparent);}
+.discount-note{font-size:11px;font-weight:700;margin-top:6px;display:flex;align-items:flex-start;gap:5px;line-height:1.4;}
+.discount-note.ok{color:var(--good);}
+.discount-note.alert{color:var(--critical);}
+.btn.icon-only{padding:8px;line-height:0;}
+.btn.icon-only svg{width:15px;height:15px;}
+.layout{display:grid;grid-template-columns:290px 1fr;gap:20px;align-items:start;}
+@media (max-width:880px){.layout{grid-template-columns:1fr;}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);}
+.sidebar{position:sticky; top:16px; display:flex;flex-direction:column;gap:14px;}
+@media (max-width:880px){.sidebar{position:static;}}
+.panel{padding:16px;}
+.panel-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-muted);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+.field{margin-bottom:12px;}
+.field:last-child{margin-bottom:0;}
+.field label{display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;color:var(--ink-2);margin-bottom:5px;}
+.field label .hint{width:14px;height:14px;border-radius:50%;border:1px solid var(--line-strong);color:var(--ink-muted);font-size:10px;display:inline-flex;align-items:center;justify-content:center;cursor:help;font-weight:700;flex:none;}
+.field label .dot{width:8px;height:8px;border-radius:50%;flex:none;}
+.field.phase-mai label .dot{background:var(--phase-mai);}
+.field.phase-mai input{border-color:var(--phase-mai);box-shadow:inset 3px 0 0 var(--phase-mai);}
+.field.phase-ea label .dot{background:var(--phase-ea);}
+.field.phase-ea input{border-color:var(--phase-ea);box-shadow:inset 3px 0 0 var(--phase-ea);}
+.field .unit-input{position:relative;display:flex;align-items:center;}
+.field input[type=number],.field input[type=date],.field input[type=text],.field select{
+  width:100%;padding:9px 10px;border-radius:9px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font-size:13.5px;font-family:'IBM Plex Mono',ui-monospace,monospace;
+}
+.field select{font-family:'Manrope',system-ui,sans-serif;}
+.field input:focus,.field select:focus{outline:2px solid var(--accent);outline-offset:1px;}
+.field input:disabled{background:color-mix(in srgb, var(--surface) 60%, var(--bg));color:var(--ink-muted);cursor:not-allowed;opacity:.75;}
+.field label .lock{width:12px;height:12px;color:var(--ink-muted);flex:none;}
+.field-note{font-size:11px;font-weight:700;margin-top:6px;display:flex;align-items:flex-start;gap:5px;line-height:1.4;color:var(--critical);}
+.field .suffix{position:absolute;right:10px;font-size:12px;color:var(--ink-muted);pointer-events:none;font-family:'IBM Plex Mono',monospace;}
+.field .unit-input input{padding-right:30px;}
+.field .years-echo{font-size:11.5px;color:var(--ink-muted);margin-top:4px;font-family:'IBM Plex Mono',monospace;}
+.divider{height:1px;background:var(--line);margin:14px 0;}
+.btn{appearance:none;border:1px solid var(--line-strong);background:var(--surface-2);color:var(--ink);border-radius:9px;padding:8px 12px;font-size:12.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+.btn:hover{background:var(--surface-3);}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);}
+.btn.primary:hover{background:var(--accent-strong);}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--ink-2);padding:6px 8px;}
+.btn.ghost:hover{background:var(--surface-2);}
+.btn.small{padding:5px 9px;font-size:11.5px;}
+.btn.block{width:100%;justify-content:center;}
+.btn svg{width:14px;height:14px;flex:none;}
+
+.content{display:flex;flex-direction:column;gap:20px;min-width:0;}
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+@media (max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
+@media (max-width:480px){.kpi-grid{grid-template-columns:1fr;}}
+.kpi-compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}
+@media (max-width:480px){.kpi-compare{grid-template-columns:1fr;}}
+.kpi{padding:14px 14px 13px;display:flex;flex-direction:column;gap:6px;min-width:0;}
+.kpi .k-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-muted);display:flex;align-items:center;gap:4px;}
+.kpi .k-value{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;letter-spacing:-.01em;overflow-wrap:break-word;}
+.kpi.hero-red{background:var(--cmp-red);border-color:var(--cmp-red);}
+.kpi.hero-red .k-label{color:var(--cmp-red-soft);}
+.kpi.hero-red .k-value{color:var(--cmp-red-ink);font-size:19px;}
+.kpi.hero-red .k-note{color:var(--cmp-red-soft);}
+.kpi.hero-blue{background:var(--cmp-blue);border-color:var(--cmp-blue);}
+.kpi.hero-blue .k-label{color:var(--cmp-blue-soft);}
+.kpi.hero-blue .k-value{color:var(--cmp-blue-ink);font-size:19px;}
+.kpi.hero-blue .k-note{color:var(--cmp-blue-soft);}
+.kpi.hero-diff{border:1px dashed var(--line-strong);background:var(--surface-2);}
+.kpi.hero-diff .k-value{font-size:19px;}
+.kpi .k-note{font-size:10.5px;color:var(--ink-muted);}
+.kpi .k-extra{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;padding-top:8px;border-top:1px solid var(--line);font-size:11.5px;}
+.kpi .k-extra b{font-family:'IBM Plex Mono',monospace;font-weight:700;}
+.kpi.hero-red .k-extra{border-top-color:rgba(255,255,255,.22);}
+.kpi.hero-red .k-extra span{color:var(--cmp-red-soft);}
+.kpi.hero-red .k-extra b{color:var(--cmp-red-ink);}
+.kpi.hero-blue .k-extra{border-top-color:rgba(255,255,255,.22);}
+.kpi.hero-blue .k-extra span{color:var(--cmp-blue-soft);}
+.kpi.hero-blue .k-extra b{color:var(--cmp-blue-ink);}
+.val-red{color:var(--cmp-red);}
+.val-blue{color:var(--cmp-blue);}
+
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 16px 0;flex-wrap:wrap;}
+.panel-head h2{font-size:15px;font-weight:800;}
+.panel-head .actions{display:flex;gap:8px;flex-wrap:wrap;}
+.panel-body{padding:14px 16px 16px;}
+.table-wrap{overflow-x:auto;padding:2px 16px 16px;}
+table{border-collapse:collapse;width:100%;min-width:980px;}
+thead th{text-align:left;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;}
+thead th.num,td.num{text-align:right;}
+.dot-inline{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle;}
+tbody td{padding:9px 10px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle;}
+tbody td.num{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:var(--surface-2);}
+tfoot td{padding:10px;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;border-top:2px solid var(--line-strong);white-space:nowrap;}
+tfoot td.label{font-family:'Manrope',sans-serif;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.04em;}
+.model-cell{min-width:210px;}
+.combo{position:relative;}
+.combo-input{width:100%;padding:7px 28px 7px 8px;border-radius:7px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font-size:12.5px;font-family:'Manrope',system-ui,sans-serif;}
+.combo-input:focus{outline:2px solid var(--accent);outline-offset:1px;}
+.combo-arrow{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:12px;height:12px;color:var(--ink-muted);pointer-events:none;}
+.combo-panel{position:fixed;z-index:40;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;box-shadow:var(--shadow);max-height:280px;overflow-y:auto;padding:4px;}
+.combo-panel[hidden]{display:none;}
+.combo-opt{padding:7px 9px;border-radius:7px;cursor:pointer;font-size:12.5px;display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
+.combo-opt .co-model{font-weight:600;color:var(--ink);}
+.combo-opt .co-sku{font-size:10.5px;color:var(--ink-muted);font-family:'IBM Plex Mono',monospace;white-space:nowrap;}
+.combo-opt:hover,.combo-opt.active{background:var(--accent);}
+.combo-opt:hover .co-model,.combo-opt.active .co-model{color:var(--accent-ink);}
+.combo-opt:hover .co-sku,.combo-opt.active .co-sku{color:var(--accent-ink);opacity:.85;}
+.combo-empty{padding:10px 9px;font-size:12px;color:var(--ink-muted);}
+.qty-input{width:64px;padding:7px 8px;border-radius:7px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:13px;text-align:center;}
+.row-actions{display:flex;gap:4px;}
+.icon-btn{width:26px;height:26px;border-radius:7px;border:1px solid transparent;background:transparent;color:var(--ink-muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;}
+.icon-btn:hover{background:var(--surface-3);color:var(--critical);}
+.icon-btn svg{width:14px;height:14px;}
+.empty-row td{padding:26px 10px;text-align:center;color:var(--ink-muted);font-size:13px;}
+
+.chart-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:0 16px;}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-2);}
+.legend .item{display:flex;align-items:center;gap:6px;}
+.legend .sw{width:10px;height:10px;border-radius:3px;flex:none;}
+.chart-area{padding:8px 16px 16px;}
+svg.chart{width:100%;height:auto;display:block;overflow:visible;}
+.axis-label{font-size:10px;fill:var(--ink-muted);font-family:'IBM Plex Mono',monospace;}
+.gridline{stroke:var(--line);stroke-width:1;}
+.chart-line{fill:none;stroke:var(--accent);stroke-width:2;}
+.chart-dot{fill:var(--surface);stroke:var(--accent);stroke-width:2;}
+.chart-tooltip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:11.5px;padding:7px 9px;border-radius:8px;font-family:'IBM Plex Mono',monospace;white-space:nowrap;transform:translate(-50%,-115%);opacity:0;transition:opacity .1s;z-index:5;box-shadow:var(--shadow);}
+.chart-wrap{position:relative;}
+
+.schedule-select{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.schedule-select select{padding:7px 10px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font-size:12.5px;}
+.phase-pill{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:100px;}
+.phase-pill.ea{background:color-mix(in srgb, var(--phase-ea) 16%, transparent);color:var(--phase-ea);}
+.phase-pill.sku{background:color-mix(in srgb, var(--phase-sku) 16%, transparent);color:var(--phase-sku);}
+.phase-pill .sw{width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,12px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:12.5px;font-weight:600;opacity:0;pointer-events:none;transition:all .18s;z-index:50;box-shadow:var(--shadow);}
+.toast.show{opacity:1;transform:translate(-50%,0);}
+
+.tooltip-pop{position:fixed;max-width:260px;background:var(--ink);color:var(--bg);font-size:11.5px;line-height:1.45;padding:9px 11px;border-radius:9px;z-index:60;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .12s;}
+.tooltip-pop.show{opacity:1;}
+</style>
+
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="mark">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2l8 3.2v6c0 5.2-3.4 9.4-8 10.8-4.6-1.4-8-5.6-8-10.8v-6L12 2z" fill="none" stroke="#fffaf9" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 12.2l2.1 2.1L15.3 10" stroke="#fffaf9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div>
+        <h1>Simulador de Ofertas EA · Fortinet</h1>
+        <div class="sub">Baseado na aba "OFERTA EA FORTINET" · Fortinet - Simulação Ofertas EA.xlsx</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <div class="discount-farol" id="discount-farol" tabindex="0" role="button" aria-label="Marcação do farol de desconto (administrador) — clique para alternar"></div>
+      <span class="badge" id="price-badge"><span class="dot"></span>Tabela de preços vigente desde 01/10/2026 (AGO/26)</span>
+      <button class="btn small" id="btn-update-base" title="Importar uma planilha atualizada da TABELA DE PREÇO"><svg viewBox="0 0 24 24" fill="none"><path d="M12 16V4M7 9l5-5 5 5M5 20h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Atualizar base</button>
+      <button class="btn ghost icon-only" id="btn-theme-toggle" title="Alternar tema claro/escuro"></button>
+      <input type="file" id="file-import-base" accept=".xlsx,.xls,.csv" hidden>
+    </div>
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="card panel">
+        <div class="panel-title">Regras comerciais da cotação</div>
+        <div class="field">
+          <label for="p-dataInstalacao">Data Assin. Contrato <span class="hint" data-tip="Data de assinatura do contrato (célula C8). Obrigatória para calcular o faseamento mensal (Período EA / Pós-EA) e os valores com desconto — sem ela, esses resultados ficam em branco.">?</span></label>
+          <input type="date" id="p-dataInstalacao">
+          <div class="field-note" id="dataInst-note"></div>
+        </div>
+        <div class="field phase-mai">
+          <label for="p-fimMAI"><span class="dot"></span> <svg class="lock" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 11V8a4 4 0 018 0v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> Data Fim MAI <span class="hint" data-tip="Até essa data (inclusive), o mês entra no Período EA, com a Desconto Licença EA aplicada (célula C6, comparação ≤). Campo bloqueado — definido pela regra comercial padrão, não pode ser alterado.">?</span></label>
+          <input type="date" id="p-fimMAI" disabled>
+        </div>
+        <div class="field phase-ea">
+          <label for="p-fimEA"><span class="dot"></span> <svg class="lock" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 11V8a4 4 0 018 0v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> Data Fim EA <span class="hint" data-tip="A partir dessa data, a licença passa a usar o preço SKU integral (célula C7). Marcada em laranja aqui e no gráfico — mesma cor do Período EA. Campo bloqueado — definido pela regra comercial padrão, não pode ser alterado.">?</span></label>
+          <input type="date" id="p-fimEA" disabled>
+        </div>
+        <div class="field">
+          <label for="p-prazo">Prazo do contrato (meses) <span class="hint" data-tip="Qualquer número de meses é aceito. O rótulo em anos é calculado proporcionalmente (ex.: 18 meses = 1,5 ANOS).">?</span></label>
+          <input type="number" id="p-prazo" min="1" step="1">
+          <div class="years-echo" id="p-prazo-echo">= 1 ANO</div>
+        </div>
+        <div class="field">
+          <label for="p-cambio">Câmbio (US$ → R$)</label>
+          <input type="number" id="p-cambio" min="0" step="0.01">
+        </div>
+        <div class="divider"></div>
+        <div class="field">
+          <label for="p-impostos">Impostos + Margens <span class="hint" data-tip="Percentual aplicado sobre o total de Hardware + Licença + Custo Operacional (célula F6).">?</span></label>
+          <div class="unit-input"><input type="number" id="p-impostos" min="0" step="1"><span class="suffix">%</span></div>
+        </div>
+        <div class="field">
+          <label for="p-descLicEA">Desconto Licença EA <span class="hint" data-tip="Desconto aplicado sobre o Price List EA (AGO/26) do modelo (célula F7). O limite máximo é definido pelo farol ao lado do título (marcação do administrador): vermelho bloqueia acima de 45%, verde libera até 100%.">?</span></label>
+          <div class="unit-input"><input type="number" id="p-descLicEA" min="0" max="100" step="1"><span class="suffix">%</span></div>
+          <div class="discount-note" id="discount-note"></div>
+        </div>
+        <div class="field">
+          <label for="p-descLicSKU">Desconto Licença SKU <span class="hint" data-tip="Desconto sobre o Price List Atual (SKU), usado nos meses após o Fim EA (célula F9). A licença SKU só pode ser comprada em anos completos: se sobrarem, por exemplo, 2 meses de Pós-EA no contrato, é cobrado 1 ano cheio de licença dividido pelos 2 meses pagantes.">?</span></label>
+          <div class="unit-input"><input type="number" id="p-descLicSKU" min="0" max="100" step="1"><span class="suffix">%</span></div>
+        </div>
+        <div class="field">
+          <label for="p-descHW">Desconto Hardware <span class="hint" data-tip="Desconto sobre o preço de tabela do hardware (célula F12).">?</span></label>
+          <div class="unit-input"><input type="number" id="p-descHW" min="0" max="100" step="1"><span class="suffix">%</span></div>
+        </div>
+        <div class="field">
+          <label for="p-opex">Custo Operacional <span class="hint" data-tip="Valor em R$ aplicado por equipamento a cada mês do contrato (célula C14 — apesar do nome 'anos' na planilha, a fórmula original multiplica por mês).">?</span></label>
+          <div class="unit-input"><input type="number" id="p-opex" min="0" step="1"><span class="suffix">R$/mês</span></div>
+        </div>
+
+        <div class="divider"></div>
+        <button class="btn block" id="btn-reset-params">Restaurar padrões da planilha</button>
+      </div>
+      <div class="card panel">
+        <div class="panel-title">Sobre este simulador</div>
+        <div style="font-size:12px;color:var(--ink-2);line-height:1.55;">
+          Os campos acima equivalem às células amarelas da aba <b style="color:var(--ink)">OFERTA EA FORTINET</b>. Os preços de hardware e licença vêm da <b style="color:var(--ink)">TABELA DE PREÇO</b> (97 modelos) e recalculam automaticamente conforme as regras mudam.<br><br>
+          A licença Pós-EA (SKU) só pode ser comprada em anos completos: quando o período Pós-EA do contrato é menor que 12 meses (ou não é múltiplo de 12), o simulador arredonda para o próximo ano cheio e distribui esse custo apenas pelos meses efetivamente pagantes daquela fase — refletindo no Total, no Valor Mês e no cronograma. O card <b style="color:var(--ink)">Valor Total + Margem</b> (cenário sem faseamento, 100% preço SKU) também respeita essa regra: o prazo do contrato é arredondado para o próximo ano cheio de licença SKU antes de calcular o total.
+        </div>
+      </div>
+    </aside>
+
+    <main class="content">
+      <div class="kpi-grid" id="kpi-grid"></div>
+      <div class="kpi-compare" id="kpi-compare"></div>
+
+      <section class="card">
+        <div class="panel-head">
+          <h2>Itens da cotação</h2>
+          <div class="actions">
+            <button class="btn small" id="btn-save-excel"><svg viewBox="0 0 24 24" fill="none"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V9l-5-6z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M14 3v6h5" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 13h6M9 16.5h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Salvar no Excel</button>
+            <button class="btn small primary" id="btn-add-item"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>Adicionar modelo</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Modelo</th>
+                <th class="num">Qtd.</th>
+                <th class="num" title="Preço unitário de hardware em dólar, já com o desconto de hardware aplicado.">Hardware Unitário ($)</th>
+                <th class="num" title="Preço unitário de licença em dólar utilizado no cálculo do Total + Margem c/ Desc. — reflete a média ponderada pelas fases MAI/EA/SKU do contrato.">Licença Unitário ($)</th>
+                <th class="num">Hardware (R$)</th>
+                <th class="num">Licença (R$)</th>
+                <th class="num">Op. (R$)</th>
+                <th class="num">Valor Mês c/ Desc.</th>
+                <th class="num"><span class="dot-inline" style="background:var(--cmp-blue)"></span>Total + Margem c/ Desc.</th>
+                <th class="num">% Desc.</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="items-tbody"></tbody>
+            <tfoot id="items-tfoot"></tfoot>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="panel-head">
+          <h2>Evolução mensal de faturamento</h2>
+        </div>
+        <div class="chart-toolbar">
+          <div class="legend">
+            <span class="item"><span class="sw" style="background:var(--phase-ea)"></span>Período EA</span>
+            <span class="item"><span class="sw" style="background:var(--phase-sku)"></span>Pós-EA (preço SKU)</span>
+          </div>
+        </div>
+        <div class="chart-area">
+          <div class="chart-wrap" id="chart-wrap">
+            <svg class="chart" id="chart-svg" viewBox="0 0 960 300" preserveAspectRatio="xMidYMid meet"></svg>
+            <div class="chart-tooltip" id="chart-tooltip"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="panel-head">
+          <h2>Cronograma mensal detalhado</h2>
+          <div class="schedule-select">
+            <select id="schedule-picker"></select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th class="num">Mês</th><th>Data</th><th>Fase</th><th class="num">Valor (R$)</th></tr>
+            </thead>
+            <tbody id="schedule-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="tooltip-pop" id="tooltip-pop"></div>
+<div class="combo-panel" id="combo-panel" hidden></div>
+
+<script>
+(function(){
+"use strict";
+
+var MODELS = [{"modelo":"FortiGate-30G","sku":"FG-30G","hw":551,"licEA":304.5,"licSKU":304.5},{"modelo":"FortiGate-31G","sku":"FG-31G","hw":692,"licEA":350.7,"licSKU":350.7},{"modelo":"FortiGate-40F","sku":"FG-40F","hw":690,"licEA":381.5,"licSKU":381.5},{"modelo":"FortiGate-40F-3G4G","sku":"FG-40F-3G4G","hw":1331,"licEA":735.7,"licSKU":735.7},{"modelo":"FortiGate-50G","sku":"FG-50G","hw":904,"licEA":458.5,"licSKU":458.5},{"modelo":"FortiGate-50G-5G","sku":"FG-50G-5G","hw":1967,"licEA":997.5,"licSKU":997.5},{"modelo":"FortiGate-50G-DSL","sku":"FG-50G-DSL","hw":1214,"licEA":616,"licSKU":616},{"modelo":"FortiGate-50G-SFP","sku":"FG-50G-SFP","hw":987,"licEA":500.5,"licSKU":500.5},{"modelo":"FortiGate-50G-SFP-PoE","sku":"FG-50G-SFP-POE","hw":1518,"licEA":770,"licSKU":770},{"modelo":"FortiGate-51G","sku":"FG-51G","hw":1030,"licEA":500.5,"licSKU":500.5},{"modelo":"FortiGate-51G-5G","sku":"FG-51G-5G","hw":2202,"licEA":1070.3,"licSKU":1070.3},{"modelo":"FortiGate-51G-SFP-PoE","sku":"FG-51G-SFP-POE","hw":1742,"licEA":847,"licSKU":847},{"modelo":"FortiGate-60F","sku":"FG-60F","hw":943,"licEA":535.5,"licSKU":535.5},{"modelo":"FortiGate-61F","sku":"FG-61F","hw":1247,"licEA":689.5,"licSKU":689.5},{"modelo":"FortiGate-70G","sku":"FG-70G","hw":1291,"licEA":701.4,"licSKU":701.4},{"modelo":"FortiGate-70G-PoE","sku":"FG-70G-POE","hw":1638,"licEA":889.7,"licSKU":889.7},{"modelo":"FortiGate-71F","sku":"FG-71F","hw":1172,"licEA":745.5,"licSKU":745.5},{"modelo":"FortiGate-71G","sku":"FG-71G","hw":1441,"licEA":782.6,"licSKU":782.6},{"modelo":"FortiGate-71G-PoE","sku":"FG-71G-POE","hw":1786,"licEA":970.2,"licSKU":970.2},{"modelo":"FortiGate-80F","sku":"FG-80F","hw":1852,"licEA":1178.1,"licSKU":1178.1},{"modelo":"FortiGate-80F-DSL","sku":"FG-80F-DSL","hw":1876,"licEA":1193.5,"licSKU":1193.5},{"modelo":"FortiGate-80F-POE","sku":"FG-80F-POE","hw":2159,"licEA":1373.4,"licSKU":1373.4},{"modelo":"FortiGate-81F","sku":"FG-81F","hw":2393,"licEA":1522.5,"licSKU":1522.5},{"modelo":"FortiGate-81F-POE","sku":"FG-81F-POE","hw":2469,"licEA":1570.8,"licSKU":1570.8},{"modelo":"FortiGate-90G","sku":"FG-90G","hw":3006,"licEA":1738.8,"licSKU":1738.8},{"modelo":"FortiGate-91G","sku":"FG-91G","hw":3565,"licEA":2062.2,"licSKU":2062.2},{"modelo":"FortiGate-120G","sku":"FG-120G","hw":4356,"licEA":2520,"licSKU":2520},{"modelo":"FortiGate-121G","sku":"FG-121G","hw":5009,"licEA":2772,"licSKU":2772},{"modelo":"FortiGate-200F","sku":"FG-200F","hw":7319,"licEA":4657.1,"licSKU":4657.1},{"modelo":"FortiGate-200G","sku":"FG-200G","hw":10930,"licEA":5544,"licSKU":5544},{"modelo":"FortiGate-201F","sku":"FG-201F","hw":8415,"licEA":5355,"licSKU":5355},{"modelo":"FortiGate-201G","sku":"FG-201G","hw":12089,"licEA":6132,"licSKU":6132},{"modelo":"FortiGate-400E-BYPASS","sku":"FG-400E-BYPASS","hw":9105,"licEA":5793.9,"licSKU":5793.9},{"modelo":"FortiGate-400F","sku":"FG-400F","hw":17570,"licEA":10647.7,"licSKU":10647.7},{"modelo":"FortiGate-400F-DC","sku":"FG-400F-DC","hw":17570,"licEA":10647.7,"licSKU":10647.7},{"modelo":"FortiGate-400G","sku":"FG-400G","hw":23520,"licEA":14700,"licSKU":14700},{"modelo":"FortiGate-401F","sku":"FG-401F","hw":21716,"licEA":12338.2,"licSKU":12338.2},{"modelo":"FortiGate-401F-DC","sku":"FG-401F-DC","hw":21716,"licEA":12338.2,"licSKU":12338.2},{"modelo":"FortiGate-401G","sku":"FG-401G","hw":26450,"licEA":16100,"licSKU":16100},{"modelo":"FortiGate-600E","sku":"FG-600E","hw":13636,"licEA":9545.2,"licSKU":9545.2},{"modelo":"FortiGate-601E","sku":"FG-601E","hw":15298,"licEA":10708.6,"licSKU":10708.6},{"modelo":"FortiGate-700G","sku":"FG-700G","hw":33396,"licEA":18480,"licSKU":18480},{"modelo":"FortiGate-701G","sku":"FG-701G","hw":36432,"licEA":20160,"licSKU":20160},{"modelo":"FortiGate-900G","sku":"FG-900G","hw":39600,"licEA":25200,"licSKU":25200},{"modelo":"FortiGate-900G-DC","sku":"FG-900G-DC","hw":39600,"licEA":25200,"licSKU":25200},{"modelo":"FortiGate-901G","sku":"FG-901G","hw":47058,"licEA":26040,"licSKU":26040},{"modelo":"FortiGate-901G-DC","sku":"FG-901G-DC","hw":47058,"licEA":26040,"licSKU":26040},{"modelo":"FortiGate-1000F","sku":"FG-1000F","hw":61318,"licEA":37162.3,"licSKU":37162.3},{"modelo":"FortiGate-1001F","sku":"FG-1001F","hw":65476,"licEA":39682.3,"licSKU":39682.3},{"modelo":"FortiGate-1100E","sku":"FG-1100E","hw":31754,"licEA":22227.8,"licSKU":22227.8},{"modelo":"FortiGate-1100E-DC","sku":"FG-1100E-DC","hw":31754,"licEA":22227.8,"licSKU":22227.8},{"modelo":"FortiGate-1101E","sku":"FG-1101E","hw":35924,"licEA":25146.8,"licSKU":25146.8},{"modelo":"FortiGate-1800F","sku":"FG-1800F","hw":65843,"licEA":38796.1,"licSKU":38796.1},{"modelo":"FortiGate-1800F-DC","sku":"FG-1800F-DC","hw":65843,"licEA":38796.1,"licSKU":38796.1},{"modelo":"FortiGate-1801F","sku":"FG-1801F","hw":71331,"licEA":42029.4,"licSKU":42029.4},{"modelo":"FortiGate-1801F-DC","sku":"FG-1801F-DC","hw":71331,"licEA":42029.4,"licSKU":42029.4},{"modelo":"FortiGate-2200E","sku":"FG-2200E","hw":35427,"licEA":24798.9,"licSKU":24798.9},{"modelo":"FortiGate-2201E","sku":"FG-2201E","hw":37789,"licEA":26452.3,"licSKU":26452.3},{"modelo":"FortiGate-2500E","sku":"FG-2500E","hw":26242,"licEA":18369.4,"licSKU":18369.4},{"modelo":"FortiGate-2600F","sku":"FG-2600F","hw":86420,"licEA":52375.4,"licSKU":52375.4},{"modelo":"FortiGate-2600F-DC","sku":"FG-2600F-DC","hw":86420,"licEA":52375.4,"licSKU":52375.4},{"modelo":"FortiGate-2601F","sku":"FG-2601F","hw":93827,"licEA":55285.3,"licSKU":55285.3},{"modelo":"FortiGate-2601F-DC","sku":"FG-2601F-DC","hw":93827,"licEA":55285.3,"licSKU":55285.3},{"modelo":"FortiGate-3000F","sku":"FG-3000F","hw":129596,"licEA":78542.8,"licSKU":78542.8},{"modelo":"FortiGate-3000F-DC","sku":"FG-3000F-DC","hw":129596,"licEA":78542.8,"licSKU":78542.8},{"modelo":"FortiGate-3000G","sku":"FG-3000G","hw":188370,"licEA":109200,"licSKU":109200},{"modelo":"FortiGate-3001F","sku":"FG-3001F","hw":136873,"licEA":82952.8,"licSKU":82952.8},{"modelo":"FortiGate-3001F-DC","sku":"FG-3001F-DC","hw":136873,"licEA":82952.8,"licSKU":82952.8},{"modelo":"FortiGate-3001G","sku":"FG-3001G","hw":201204,"licEA":113400,"licSKU":113400},{"modelo":"FortiGate-3200F","sku":"FG-3200F","hw":173250,"licEA":105000,"licSKU":105000},{"modelo":"FortiGate-3201F","sku":"FG-3201F","hw":180180,"licEA":109200,"licSKU":109200},{"modelo":"FortiGate-3300E","sku":"FG-3300E","hw":44455,"licEA":28289.1,"licSKU":28289.1},{"modelo":"FortiGate-3301E","sku":"FG-3301E","hw":47630,"licEA":30310,"licSKU":30310},{"modelo":"FortiGate-3500F","sku":"FG-3500F","hw":284130,"licEA":172200,"licSKU":172200},{"modelo":"FortiGate-3500G","sku":"FG-3500G","hw":288288,"licEA":192192,"licSKU":192192},{"modelo":"FortiGate-3501F","sku":"FG-3501F","hw":291060,"licEA":176400,"licSKU":176400},{"modelo":"FortiGate-3501G","sku":"FG-3501G","hw":303264,"licEA":196560,"licSKU":196560},{"modelo":"FortiGate-3700F","sku":"FG-3700F","hw":303534,"licEA":193158,"licSKU":193158},{"modelo":"FortiGate-3701F","sku":"FG-3701F","hw":310464,"licEA":197568,"licSKU":197568},{"modelo":"FortiGate-3800G","sku":"FG-3800G","hw":470925,"licEA":273000,"licSKU":273000},{"modelo":"FortiGate-3800G-DC","sku":"FG-3800G-DC","hw":470925,"licEA":273000,"licSKU":273000},{"modelo":"FortiGate-3801G","sku":"FG-3801G","hw":478170,"licEA":277200,"licSKU":277200},{"modelo":"FortiGate-3801G-DC","sku":"FG-3801G-DC","hw":478170,"licEA":277200,"licSKU":277200},{"modelo":"FortiGate-4200F","sku":"FG-4200F","hw":321568,"licEA":182708.4,"licSKU":182708.4},{"modelo":"FortiGate-4200F-DC","sku":"FG-4200F-DC","hw":321568,"licEA":182708.4,"licSKU":182708.4},{"modelo":"FortiGate-4201F","sku":"FG-4201F","hw":332287,"licEA":188799.1,"licSKU":188799.1},{"modelo":"FortiGate-4201F-DC","sku":"FG-4201F-DC","hw":332287,"licEA":188799.1,"licSKU":188799.1},{"modelo":"FortiGate-4400F","sku":"FG-4400F","hw":417701,"licEA":246120,"licSKU":246120},{"modelo":"FortiGate-4400F-DC","sku":"FG-4400F-DC","hw":417701,"licEA":246120,"licSKU":246120},{"modelo":"FortiGate-4401F","sku":"FG-4401F","hw":424829,"licEA":250320,"licSKU":250320},{"modelo":"FortiGate-4401F-DC","sku":"FG-4401F-DC","hw":424829,"licEA":250320,"licSKU":250320},{"modelo":"FortiGate-4800F","sku":"FG-4800F","hw":451440,"licEA":287280,"licSKU":287280},{"modelo":"FortiGate-4800F-DC","sku":"FG-4800F-DC","hw":451440,"licEA":287280,"licSKU":287280},{"modelo":"FortiGate-4801F","sku":"FG-4801F","hw":458040,"licEA":291480,"licSKU":291480},{"modelo":"FortiGate-4801F-DC","sku":"FG-4801F-DC","hw":458040,"licEA":291480,"licSKU":291480},{"modelo":"FortiGate-4801F-DC-NEBS","sku":"FG-4801F-DC-NEBS","hw":458040,"licEA":291480,"licSKU":291480},{"modelo":"FortiGate-4801F-NEBS","sku":"FG-4801F-NEBS","hw":458040,"licEA":291480,"licSKU":291480}];
+
+var DEFAULT_PARAMS = {
+  dataInstalacao: "",
+  prazoMeses: 12,
+  cambio: 5.4,
+  impostosMargens: 30,
+  descLicEA: 20,
+  descLicSKU: 20,
+  descHW: 0,
+  opex: 100,
+  fimMAI: "2027-09-24",
+  fimEA: "2028-09-24"
+};
+var DESC_LIC_EA_LIMITE_VERMELHO = 45;
+var DESC_LIC_EA_LIMITE_VERDE = 100;
+var FAROL_STORAGE_KEY = "simulador-ea-farol-desconto";
+
+var params = Object.assign({}, DEFAULT_PARAMS);
+var items = [{id: uid(), modelo: "", qty: 1}];
+var scheduleView = "combined";
+
+function uid(){ return "i" + Math.random().toString(36).slice(2,10); }
+
+function parseUTCDate(s){
+  var p = s.split("-").map(Number);
+  return new Date(Date.UTC(p[0], p[1]-1, p[2]));
+}
+function fmtDateISO(d){
+  return d.getUTCFullYear() + "-" + String(d.getUTCMonth()+1).padStart(2,"0") + "-" + String(d.getUTCDate()).padStart(2,"0");
+}
+function fmtDateBR(d){
+  return String(d.getUTCDate()).padStart(2,"0") + "/" + String(d.getUTCMonth()+1).padStart(2,"0") + "/" + d.getUTCFullYear();
+}
+function edate(date, months){
+  var y = date.getUTCFullYear(), m = date.getUTCMonth(), d = date.getUTCDate();
+  var total = y*12 + m + months;
+  var newY = Math.floor(total/12);
+  var newM = total % 12; if(newM<0){newM+=12; newY-=1;}
+  var lastDay = new Date(Date.UTC(newY, newM+1, 0)).getUTCDate();
+  return new Date(Date.UTC(newY, newM, Math.min(d,lastDay)));
+}
+var BRL = new Intl.NumberFormat("pt-BR", {style:"currency", currency:"BRL", maximumFractionDigits:2});
+function fmtBRL(v){ if(!isFinite(v)) return "—"; return BRL.format(v); }
+var USD = new Intl.NumberFormat("pt-BR", {style:"currency", currency:"USD", maximumFractionDigits:2});
+function fmtUSD(v){ if(!isFinite(v)) return "—"; return USD.format(v); }
+function fmtNum1(v){ return v.toLocaleString("pt-BR", {maximumFractionDigits:1, minimumFractionDigits: (v%1===0?0:1)}); }
+function yearsLabel(months){
+  var y = months/12;
+  if (Math.abs(y - Math.round(y)) < 1e-9){
+    var yi = Math.round(y);
+    return yi + (yi===1 ? " ANO" : " ANOS");
+  }
+  return fmtNum1(y) + " ANOS";
+}
+
+function getParamsFromForm(){
+  params.dataInstalacao = document.getElementById("p-dataInstalacao").value || DEFAULT_PARAMS.dataInstalacao;
+  params.prazoMeses = Math.max(1, parseInt(document.getElementById("p-prazo").value,10) || 1);
+  params.cambio = parseFloat(document.getElementById("p-cambio").value) || 0;
+  params.impostosMargens = parseFloat(document.getElementById("p-impostos").value) || 0;
+  params.descLicEA = parseFloat(document.getElementById("p-descLicEA").value) || 0;
+  params.descLicSKU = parseFloat(document.getElementById("p-descLicSKU").value) || 0;
+  params.descHW = parseFloat(document.getElementById("p-descHW").value) || 0;
+  params.opex = parseFloat(document.getElementById("p-opex").value) || 0;
+  params.fimMAI = document.getElementById("p-fimMAI").value || DEFAULT_PARAMS.fimMAI;
+  params.fimEA = document.getElementById("p-fimEA").value || DEFAULT_PARAMS.fimEA;
+}
+
+function setFormFromParams(){
+  document.getElementById("p-dataInstalacao").value = params.dataInstalacao;
+  document.getElementById("p-prazo").value = params.prazoMeses;
+  document.getElementById("p-cambio").value = params.cambio;
+  document.getElementById("p-impostos").value = params.impostosMargens;
+  document.getElementById("p-descLicEA").value = params.descLicEA;
+  document.getElementById("p-descLicSKU").value = params.descLicSKU;
+  document.getElementById("p-descHW").value = params.descHW;
+  document.getElementById("p-opex").value = params.opex;
+  document.getElementById("p-fimMAI").value = params.fimMAI;
+  document.getElementById("p-fimEA").value = params.fimEA;
+  document.getElementById("p-prazo-echo").textContent = "= " + yearsLabel(params.prazoMeses);
+}
+
+function computeItem(item){
+  var model = MODELS.find(function(m){ return m.modelo === item.modelo; });
+  if(!model) return null;
+  var qty = Math.max(0, item.qty||0);
+  var G12 = model.hw * (1 - params.descHW/100);
+  var G7 = model.licEA * (1 - params.descLicEA/100);
+  var G9 = model.licSKU * (1 - params.descLicSKU/100);
+  var D17 = params.prazoMeses/12;
+  var cambio = params.cambio;
+
+  var hwTotal = G12*cambio*qty;
+  var licTotalFlat = G7*D17*cambio*qty; // referência EA cheia — usada só no KPI "Licença (R$)"
+  // A licença SKU só pode ser comprada em anos completos: no cenário "sem faseamento" (contrato
+  // inteiro precificado a SKU), arredonda-se o prazo para o próximo ano cheio antes de aplicar o preço anual.
+  var skuYearsFull = params.prazoMeses>0 ? Math.ceil(params.prazoMeses/12) : 0;
+  var licTotalFlatSKU = skuYearsFull * G9 * cambio * qty; // usada no card "Valor Total + Margem" (sem faseamento)
+  var opexTotal = params.opex*qty*params.prazoMeses;
+  var totalComMargem = (hwTotal+licTotalFlatSKU+opexTotal)*(1+params.impostosMargens/100);
+  var valorMes = params.prazoMeses>0 ? totalComMargem/params.prazoMeses : 0;
+
+  // Data Assin. Contrato é obrigatória para o faseamento mensal (Período EA / Pós-EA).
+  // Sem ela, os resultados faseados (Total c/ Desc., cronograma, gráfico) ficam em branco.
+  var dateOk = !!params.dataInstalacao;
+  var dataInst = dateOk ? parseUTCDate(params.dataInstalacao) : null;
+  if(dateOk && isNaN(dataInst.getTime())) dateOk = false;
+
+  var monthly = [];
+  var nSku = 0, skuYears = 0, skuLicTotalBRL = 0, totalMensal = NaN, diferenca = NaN, valorMesDesc = NaN;
+
+  if(dateOk){
+    var fimMAI = parseUTCDate(params.fimMAI);
+    var fimEA = parseUTCDate(params.fimEA);
+
+    // 1ª passada: define a fase de cada mês e conta quantos meses caem em Pós-EA (SKU).
+    var rawPhases = [];
+    for(var i=0;i<params.prazoMeses;i++){
+      var md0 = edate(dataInst, i);
+      var rp;
+      if(md0.getTime() <= fimMAI.getTime()) rp = "mai";
+      else if(md0.getTime() <= fimEA.getTime()) rp = "ea";
+      else { rp = "sku"; nSku++; }
+      rawPhases.push({date: md0, rawPhase: rp});
+    }
+
+    // Licença SKU só pode ser comprada em anos completos: os meses pagantes de Pós-EA (nSku)
+    // "puxam" o número de anos necessário arredondado para cima, e o custo desses anos é
+    // reconhecido apenas nesses meses pagantes (não diluído pelo prazo total do contrato).
+    skuYears = nSku > 0 ? Math.ceil(nSku/12) : 0;
+    skuLicTotalBRL = skuYears * G9 * cambio * qty;
+    var skuLicMonthlyBRL = nSku > 0 ? skuLicTotalBRL/nSku : 0;
+    var eaLicMonthlyBRL = G7*cambio*qty/12; // preço anual EA / 12 — inalterado (sem exigência de compra anual)
+    var hwComp = G12*cambio*qty;
+
+    monthly = rawPhases.map(function(m, i){
+      var licMonthlyRate = m.rawPhase==="sku" ? skuLicMonthlyBRL : eaLicMonthlyBRL;
+      // Período MAI e Período EA são exibidos juntos como "Período EA" na Evolução e no Cronograma.
+      var phase = m.rawPhase==="sku" ? "sku" : "ea";
+      var value = params.prazoMeses>0 ? (hwComp/params.prazoMeses + licMonthlyRate + opexTotal/params.prazoMeses)*(1+params.impostosMargens/100) : 0;
+      return {idx:i+1, date: m.date, phase: phase, value: value};
+    });
+    totalMensal = monthly.reduce(function(s,x){ return s+x.value; }, 0);
+    diferenca = totalComMargem - totalMensal;
+    valorMesDesc = params.prazoMeses>0 ? totalMensal/params.prazoMeses : 0;
+  }
+
+  // Componentes (R$) alinhados ao Total + Margem c/ Desc.: Hardware e Operacional não variam por fase,
+  // então a Licença é obtida por diferença — assim Hardware + Licença + Operacional, com margem, fecha
+  // exatamente com o Total + Margem c/ Desc. (soma faseada MAI/EA/SKU).
+  var margemMult = 1+params.impostosMargens/100;
+  var licPhasedTotal = margemMult!==0 ? (totalMensal/margemMult) - hwTotal - opexTotal : 0;
+  var denomUnit = D17*cambio*qty;
+  var hwUnitUSD = G12;
+  var licUnitUSD = denomUnit>0 ? licPhasedTotal/denomUnit : 0;
+
+  return {
+    item:item, model:model, qty:qty, G12:G12, G7:G7, G9:G9, D17:D17,
+    hwTotal:hwTotal, licTotalFlat:licTotalFlat, licTotalFlatSKU:licTotalFlatSKU, opexTotal:opexTotal,
+    totalComMargem:totalComMargem, valorMes:valorMes, totalMensal:totalMensal, diferenca:diferenca,
+    valorMesDesc:valorMesDesc, licPhasedTotal:licPhasedTotal, hwUnitUSD:hwUnitUSD, licUnitUSD:licUnitUSD,
+    nSku:nSku, skuYears:skuYears, skuLicTotalBRL:skuLicTotalBRL, skuYearsFull:skuYearsFull, dateOk:dateOk,
+    monthly:monthly
+  };
+}
+
+function computeAll(){
+  return items.map(computeItem).filter(Boolean);
+}
+
+function modelDisplay(m){ return m ? m.modelo+" — "+m.sku : ""; }
+
+function pctDesc(margem, mensal){
+  if(!margem || !isFinite(mensal)) return NaN;
+  return (1 - mensal/margem) * 100;
+}
+function fmtPct(v){
+  if(!isFinite(v)) return "—";
+  return v.toLocaleString("pt-BR",{maximumFractionDigits:1,minimumFractionDigits:1}) + "%";
+}
+
+function kpiTile(t){
+  var extra = t.extra ? '<div class="k-extra"><span>'+t.extra.label+'</span><b>'+t.extra.value+'</b></div>' : '';
+  return '<div class="card kpi'+(t.cls?" "+t.cls:"")+'"><div class="k-label">'+t.label+'</div><div class="k-value">'+t.value+'</div><div class="k-note">'+t.note+'</div>'+extra+'</div>';
+}
+
+function renderKPIs(results){
+  var totQty = results.reduce(function(s,r){return s+r.qty;},0);
+  var totHW = results.reduce(function(s,r){return s+r.hwTotal;},0);
+  var totLic = results.reduce(function(s,r){return s+r.licTotalFlat;},0);
+  var totOpex = results.reduce(function(s,r){return s+r.opexTotal;},0);
+  var totMargem = results.reduce(function(s,r){return s+r.totalComMargem;},0);
+  var totMensal = results.reduce(function(s,r){return s+r.totalMensal;},0);
+  var totValorMes = results.reduce(function(s,r){return s+r.valorMes;},0);
+  var totValorMesDesc = params.prazoMeses>0 ? totMensal/params.prazoMeses : 0;
+  var totDiferenca = results.reduce(function(s,r){return s+r.diferenca;},0);
+  var totPct = pctDesc(totMargem, totMensal);
+
+  var infoTiles = [
+    {label:"Prazo do contrato", value: yearsLabel(params.prazoMeses), note: params.prazoMeses+" mês(es)"},
+    {label:"Equipamentos", value: totQty.toLocaleString("pt-BR"), note: results.length+" modelo(s) na cotação"},
+    {label:"Hardware (R$)", value: fmtBRL(totHW), note:"soma dos itens"},
+    {label:"Licença (R$)", value: fmtBRL(totLic), note:"desconto EA cheio"},
+    {label:"Custo operacional", value: fmtBRL(totOpex), note:"prazo × qtd"},
+    {label:"Desconto efetivo", value: fmtPct(totPct), note: fmtBRL(totDiferenca)+" de diferença", cls:"hero-diff"}
+  ];
+  document.getElementById("kpi-grid").innerHTML = infoTiles.map(kpiTile).join("");
+
+  var compareTiles = [
+    {label:"Valor Total + Margem", value: fmtBRL(totMargem), note:"sem faseamento · preço SKU integral (J10)", cls:"hero-red", extra:{label:"Valor Mês", value: fmtBRL(totValorMes)}},
+    {label:"Valor Total + Margem c/ Desc.", value: fmtBRL(totMensal), note:"faseado MAI/EA/SKU (J13)", cls:"hero-blue", extra:{label:"Valor Mês c/ Desc.", value: fmtBRL(totValorMesDesc)}}
+  ];
+  document.getElementById("kpi-compare").innerHTML = compareTiles.map(kpiTile).join("");
+}
+
+function renderItems(results){
+  var tbody = document.getElementById("items-tbody");
+  if(items.length===0){
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="11">Nenhum item na cotação. Clique em "Adicionar modelo" para começar.</td></tr>';
+  } else {
+    tbody.innerHTML = items.map(function(item){
+      var r = results.find(function(x){return x.item.id===item.id;});
+      var pct = r ? pctDesc(r.totalComMargem, r.totalMensal) : 0;
+      return '<tr data-id="'+item.id+'">'+
+        '<td class="model-cell"><div class="combo" data-id="'+item.id+'">'+
+          '<input type="text" class="combo-input" data-id="'+item.id+'" autocomplete="off" placeholder="Buscar modelo..." value="'+(r?modelDisplay(r.model):item.modelo)+'">'+
+          '<svg class="combo-arrow" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
+        '</div></td>'+
+        '<td class="num"><input type="number" class="qty-input" min="1" step="1" data-id="'+item.id+'" value="'+item.qty+'"></td>'+
+        '<td class="num">'+(r?fmtUSD(r.hwUnitUSD):"—")+'</td>'+
+        '<td class="num">'+(r?fmtUSD(r.licUnitUSD):"—")+'</td>'+
+        '<td class="num">'+(r?fmtBRL(r.hwTotal):"—")+'</td>'+
+        '<td class="num">'+(r?fmtBRL(r.licPhasedTotal):"—")+'</td>'+
+        '<td class="num">'+(r?fmtBRL(r.opexTotal):"—")+'</td>'+
+        '<td class="num">'+(r?fmtBRL(r.valorMesDesc):"—")+'</td>'+
+        '<td class="num val-blue">'+(r?fmtBRL(r.totalMensal):"—")+'</td>'+
+        '<td class="num">'+(r?fmtPct(pct):"—")+'</td>'+
+        '<td><div class="row-actions"><button class="icon-btn remove-item" data-id="'+item.id+'" title="Remover"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div></td>'+
+      '</tr>';
+    }).join("");
+  }
+
+  var tfoot = document.getElementById("items-tfoot");
+  if(results.length){
+    var sum = function(f){ return results.reduce(function(s,r){return s+f(r);},0); };
+    var fMargem = sum(function(r){return r.totalComMargem;});
+    var fMensal = sum(function(r){return r.totalMensal;});
+    tfoot.innerHTML = '<tr>'+
+      '<td class="label">Total</td><td class="num">'+sum(function(r){return r.qty;})+'</td>'+
+      '<td class="num">—</td>'+
+      '<td class="num">—</td>'+
+      '<td class="num">'+fmtBRL(sum(function(r){return r.hwTotal;}))+'</td>'+
+      '<td class="num">'+fmtBRL(sum(function(r){return r.licPhasedTotal;}))+'</td>'+
+      '<td class="num">'+fmtBRL(sum(function(r){return r.opexTotal;}))+'</td>'+
+      '<td class="num">'+fmtBRL(sum(function(r){return r.valorMesDesc;}))+'</td>'+
+      '<td class="num val-blue">'+fmtBRL(fMensal)+'</td>'+
+      '<td class="num">'+fmtPct(pctDesc(fMargem,fMensal))+'</td><td></td>'+
+    '</tr>';
+  } else { tfoot.innerHTML = ""; }
+}
+
+// ---- searchable combobox (Modelo) ----
+var combo = { openId:null, filtered:[], activeIndex:-1 };
+
+function comboPanelEl(){ return document.getElementById("combo-panel"); }
+
+function filterModels(query){
+  var q = (query||"").trim().toLowerCase();
+  if(!q) return MODELS;
+  return MODELS.filter(function(m){
+    return m.modelo.toLowerCase().indexOf(q)>=0 || m.sku.toLowerCase().indexOf(q)>=0;
+  });
+}
+
+function openCombo(id, inputEl){
+  combo.openId = id;
+  combo.filtered = filterModels("");
+  combo.activeIndex = -1;
+  renderComboPanel();
+  positionCombo(inputEl);
+  comboPanelEl().hidden = false;
+}
+
+function positionCombo(inputEl){
+  var r = inputEl.getBoundingClientRect();
+  var panel = comboPanelEl();
+  panel.style.left = r.left + "px";
+  panel.style.top = (r.bottom + 4) + "px";
+  panel.style.width = Math.max(220, r.width) + "px";
+}
+
+function renderComboPanel(){
+  var panel = comboPanelEl();
+  if(!combo.filtered.length){
+    panel.innerHTML = '<div class="combo-empty">Nenhum modelo encontrado.</div>';
+    return;
+  }
+  panel.innerHTML = combo.filtered.map(function(m, idx){
+    return '<div class="combo-opt'+(idx===combo.activeIndex?" active":"")+'" data-modelo="'+m.modelo+'" data-idx="'+idx+'">'+
+      '<span class="co-model">'+m.modelo+'</span><span class="co-sku">'+m.sku+'</span></div>';
+  }).join("");
+}
+
+function closeCombo(){
+  combo.openId = null;
+  combo.activeIndex = -1;
+  comboPanelEl().hidden = true;
+}
+
+function selectCombo(modelo){
+  var id = combo.openId;
+  var item = items.find(function(i){return i.id===id;});
+  closeCombo();
+  if(!item) return;
+  item.modelo = modelo;
+  renderAll();
+}
+
+var PHASE_COLOR = {ea:"var(--phase-ea)", sku:"var(--phase-sku)"};
+var PHASE_LABEL = {ea:"Período EA", sku:"Pós-EA"};
+
+function combinedMonthly(results){
+  if(!results.length || !results.some(function(r){ return r.dateOk; })) return [];
+  var n = params.prazoMeses;
+  var out = [];
+  for(var i=0;i<n;i++){
+    var date = results[0].monthly[i] ? results[0].monthly[i].date : null;
+    var phase = results[0].monthly[i] ? results[0].monthly[i].phase : "mai";
+    var value = 0;
+    for(var j=0;j<results.length;j++){
+      if(results[j].monthly[i]) value += results[j].monthly[i].value;
+    }
+    out.push({idx:i+1, date:date, phase:phase, value:value});
+  }
+  return out;
+}
+
+function renderChart(results){
+  var svg = document.getElementById("chart-svg");
+  var data = combinedMonthly(results);
+  if(!data.length){
+    var msg = results.length && !results.some(function(r){return r.dateOk;}) ? "Informe a Data Assin. Contrato para ver a evolução mensal." : "Sem dados para exibir.";
+    svg.innerHTML = '<text x="480" y="150" text-anchor="middle" fill="var(--ink-muted)" font-size="13">'+msg+'</text>';
+    return;
+  }
+  var W = 960, H = 300, padL = 56, padR = 16, padT = 18, padB = 34;
+  var plotW = W - padL - padR, plotH = H - padT - padB;
+  var maxV = Math.max.apply(null, data.map(function(d){return d.value;})) * 1.15 || 1;
+  var minV = 0;
+  var n = data.length;
+  var x = function(i){ return padL + (n<=1 ? plotW/2 : (i/(n-1))*plotW); };
+  var y = function(v){ return padT + plotH - ((v-minV)/(maxV-minV||1))*plotH; };
+
+  var svgns = "http://www.w3.org/2000/svg";
+  var parts = [];
+
+  // phase bands
+  var i=0;
+  while(i<n){
+    var phase = data[i].phase;
+    var start = i;
+    while(i<n && data[i].phase===phase) i++;
+    var end = i-1;
+    var bx0 = n<=1 ? padL : x(start) - (start===0?0:(x(start)-x(Math.max(start-1,0)))/2);
+    var bx1 = n<=1 ? padL+plotW : x(end) + (end===n-1?0:(x(Math.min(end+1,n-1))-x(end))/2);
+    if(n===1){ bx0=padL; bx1=padL+plotW; }
+    parts.push('<rect x="'+bx0.toFixed(1)+'" y="'+padT+'" width="'+Math.max(0,bx1-bx0).toFixed(1)+'" height="'+plotH+'" fill="'+PHASE_COLOR[phase]+'" opacity="0.09"></rect>');
+  }
+
+  // gridlines + y labels
+  var steps = 4;
+  for(var g=0; g<=steps; g++){
+    var v = minV + (maxV-minV)*g/steps;
+    var gy = y(v);
+    parts.push('<line class="gridline" x1="'+padL+'" x2="'+(padL+plotW)+'" y1="'+gy.toFixed(1)+'" y2="'+gy.toFixed(1)+'"></line>');
+    parts.push('<text class="axis-label" x="'+(padL-8)+'" y="'+(gy+3).toFixed(1)+'" text-anchor="end">'+shortBRL(v)+'</text>');
+  }
+
+  // x labels (sparse)
+  var labelEvery = Math.max(1, Math.ceil(n/10));
+  for(var k=0;k<n;k+=labelEvery){
+    parts.push('<text class="axis-label" x="'+x(k).toFixed(1)+'" y="'+(H-10)+'" text-anchor="middle">'+fmtDateBR(data[k].date).slice(3)+'</text>');
+  }
+
+  // line path
+  var path = data.map(function(d,idx){ return (idx===0?"M":"L")+x(idx).toFixed(1)+","+y(d.value).toFixed(1); }).join(" ");
+  parts.push('<path class="chart-line" d="'+path+'"></path>');
+
+  // area fill under line
+  var areaPath = path + " L"+x(n-1).toFixed(1)+","+(padT+plotH)+" L"+x(0).toFixed(1)+","+(padT+plotH)+" Z";
+  parts.push('<path d="'+areaPath+'" fill="var(--accent)" opacity="0.08" stroke="none"></path>');
+
+  // dots
+  data.forEach(function(d,idx){
+    parts.push('<circle class="chart-dot" cx="'+x(idx).toFixed(1)+'" cy="'+y(d.value).toFixed(1)+'" r="3.5" data-idx="'+idx+'"></circle>');
+  });
+
+  // hover targets
+  data.forEach(function(d,idx){
+    parts.push('<rect x="'+(x(idx)-(plotW/n)/2).toFixed(1)+'" y="'+padT+'" width="'+(plotW/n).toFixed(1)+'" height="'+plotH+'" fill="transparent" class="hover-target" data-idx="'+idx+'"></rect>');
+  });
+
+  svg.setAttribute("viewBox","0 0 "+W+" "+H);
+  svg.innerHTML = parts.join("");
+
+  var tooltip = document.getElementById("chart-tooltip");
+  var wrap = document.getElementById("chart-wrap");
+  svg.querySelectorAll(".hover-target").forEach(function(el){
+    el.addEventListener("mousemove", function(e){
+      var idx = parseInt(el.getAttribute("data-idx"),10);
+      var d = data[idx];
+      var rect = wrap.getBoundingClientRect();
+      var svgRect = svg.getBoundingClientRect();
+      var px = svgRect.left - rect.left + (x(idx)/W)*svgRect.width;
+      var py = svgRect.top - rect.top + (y(d.value)/H)*svgRect.height;
+      tooltip.style.left = px+"px";
+      tooltip.style.top = py+"px";
+      tooltip.innerHTML = "Mês "+d.idx+" · "+fmtDateBR(d.date)+"<br>"+fmtBRL(d.value)+" · fase "+PHASE_LABEL[d.phase];
+      tooltip.classList.add("show");
+    });
+    el.addEventListener("mouseleave", function(){ tooltip.classList.remove("show"); });
+  });
+}
+
+function shortBRL(v){
+  if(v>=1000) return "R$ "+(v/1000).toLocaleString("pt-BR",{maximumFractionDigits:1})+"k";
+  return "R$ "+v.toFixed(0);
+}
+
+function renderSchedulePicker(results){
+  var sel = document.getElementById("schedule-picker");
+  var current = scheduleView;
+  var html = '<option value="combined">Todos os itens (combinado)</option>';
+  results.forEach(function(r){
+    html += '<option value="'+r.item.id+'">'+r.model.modelo+' × '+r.qty+'</option>';
+  });
+  sel.innerHTML = html;
+  var exists = current==="combined" || results.some(function(r){return r.item.id===current;});
+  sel.value = exists ? current : "combined";
+  scheduleView = sel.value;
+}
+
+function renderSchedule(results){
+  var tbody = document.getElementById("schedule-tbody");
+  var rows;
+  if(scheduleView==="combined"){
+    rows = combinedMonthly(results);
+  } else {
+    var r = results.find(function(x){return x.item.id===scheduleView;});
+    rows = r ? r.monthly : [];
+  }
+  if(!rows.length){
+    var msg = results.length && !results.some(function(r){return r.dateOk;}) ? "Informe a Data Assin. Contrato para ver o cronograma mensal." : "Sem cronograma para exibir.";
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="4">'+msg+'</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(function(d){
+    return '<tr><td class="num">'+d.idx+'</td><td>'+fmtDateBR(d.date)+'</td>'+
+      '<td><span class="phase-pill '+d.phase+'"><span class="sw"></span>'+PHASE_LABEL[d.phase]+'</span></td>'+
+      '<td class="num">'+fmtBRL(d.value)+'</td></tr>';
+  }).join("");
+}
+
+function renderAll(){
+  closeCombo();
+  var results = computeAll();
+  renderKPIs(results);
+  renderItems(results);
+  renderChart(results);
+  renderSchedulePicker(results);
+  renderSchedule(results);
+  renderDiscountFarol();
+  renderDataInstNote();
+}
+
+function renderDataInstNote(){
+  var note = document.getElementById("dataInst-note");
+  if(!note) return;
+  var filled = !!document.getElementById("p-dataInstalacao").value;
+  note.textContent = filled ? "" : "Informe a Data Assin. Contrato para calcular o faseamento mensal (Período EA / Pós-EA) e os valores com desconto.";
+}
+
+// ---- Farol de desconto (marcação manual do administrador) ----
+function getFarolState(){
+  try{
+    var v = localStorage.getItem(FAROL_STORAGE_KEY);
+    if(v === "verde" || v === "vermelho") return v;
+  }catch(e){}
+  return "vermelho";
+}
+function setFarolState(state){
+  try{ localStorage.setItem(FAROL_STORAGE_KEY, state); }catch(e){}
+}
+function discountEALimit(){
+  return getFarolState() === "vermelho" ? DESC_LIC_EA_LIMITE_VERMELHO : DESC_LIC_EA_LIMITE_VERDE;
+}
+var discountClampedUntil = 0;
+function enforceDiscountEALimit(input){
+  var limit = discountEALimit();
+  var raw = parseFloat(input.value);
+  if(!isNaN(raw) && raw > limit){
+    input.value = limit;
+    discountClampedUntil = Date.now() + 4500;
+    showToast("Desconto Licença EA limitado a " + limit + "% — farol " + (getFarolState()==="vermelho" ? "vermelho" : "verde") + ".");
+    clearTimeout(enforceDiscountEALimit._t);
+    enforceDiscountEALimit._t = setTimeout(function(){ renderDiscountFarol(); }, 4500);
+    return true;
+  }
+  return false;
+}
+function toggleFarolState(){
+  var next = getFarolState() === "vermelho" ? "verde" : "vermelho";
+  setFarolState(next);
+  var input = document.getElementById("p-descLicEA");
+  var limit = discountEALimit();
+  var v = parseFloat(input.value);
+  if(!isNaN(v) && v > limit){
+    input.value = limit;
+    discountClampedUntil = Date.now() + 4500;
+    clearTimeout(enforceDiscountEALimit._t);
+    enforceDiscountEALimit._t = setTimeout(function(){ renderDiscountFarol(); }, 4500);
+    showToast("Farol alterado para " + (next==="vermelho"?"vermelho":"verde") + " — desconto ajustado automaticamente para " + limit + "%.");
+  } else {
+    showToast("Farol alterado para " + (next==="vermelho" ? "vermelho (bloqueia acima de 45%)" : "verde (libera até 100%)") + ".");
+  }
+  getParamsFromForm();
+  renderAll();
+}
+function renderDiscountFarol(){
+  var farol = document.getElementById("discount-farol");
+  var note = document.getElementById("discount-note");
+  if(!farol || !note) return;
+  var state = getFarolState();
+  var isVermelho = state === "vermelho";
+  var limit = discountEALimit();
+
+  farol.className = "discount-farol " + (isVermelho ? "alert" : "ok");
+  farol.innerHTML = '<span class="df-dot"></span>' + (isVermelho
+    ? "Farol vermelho — até 45%"
+    : "Farol verde — até 100%") + '<span class="df-toggle">⇄</span>';
+  farol.title = "Marcação do administrador (clique para alternar): " +
+    (isVermelho ? "Vermelho — bloqueia desconto Licença EA acima de 45%." : "Verde — libera desconto Licença EA até 100%.");
+
+  var clamped = Date.now() < discountClampedUntil;
+  note.className = "discount-note " + (clamped ? "alert" : (isVermelho ? "alert" : "ok"));
+  if(clamped){
+    note.textContent = "Desconto acima de " + limit + "% não é permitido com o farol " + (isVermelho ? "vermelho" : "verde") + " — ajustado automaticamente para " + limit + "%.";
+  } else if(isVermelho){
+    note.textContent = "Farol vermelho (marcação do administrador): desconto Licença EA liberado somente até 45%. Para permitir mais, marque o farol como verde.";
+  } else {
+    note.textContent = "Farol verde (marcação do administrador): desconto Licença EA liberado até 100%.";
+  }
+}
+
+function showToast(msg){
+  var t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(showToast._h);
+  showToast._h = setTimeout(function(){ t.classList.remove("show"); }, 2200);
+}
+
+function round2(v){ return Math.round(v*100)/100; }
+function round1(v){ return Math.round(v*10)/10; }
+
+// ---- Salvar no Excel (.xlsx export, 100% local via SheetJS) ----
+function buildExportRows(results){
+  var rows = [];
+  rows.push(["Simulador de Ofertas EA — Fortinet"]);
+  rows.push(["Gerado em", new Date().toLocaleString("pt-BR")]);
+  rows.push([]);
+  rows.push(["Regras comerciais da cotação"]);
+  rows.push(["Data Assin. Contrato", params.dataInstalacao ? fmtDateBR(parseUTCDate(params.dataInstalacao)) : "(não informada)"]);
+  rows.push(["Prazo do contrato", yearsLabel(params.prazoMeses)+" ("+params.prazoMeses+" meses)"]);
+  rows.push(["Câmbio (US$ → R$)", params.cambio]);
+  rows.push(["Impostos + Margens (%)", params.impostosMargens]);
+  rows.push(["Desconto Licença EA (%)", params.descLicEA]);
+  rows.push(["Desconto Licença SKU (%)", params.descLicSKU]);
+  rows.push(["Desconto Hardware (%)", params.descHW]);
+  rows.push(["Custo Operacional (R$/mês)", params.opex]);
+  rows.push(["Data Fim MAI", fmtDateBR(parseUTCDate(params.fimMAI))]);
+  rows.push(["Data Fim EA", fmtDateBR(parseUTCDate(params.fimEA))]);
+  rows.push([]);
+  rows.push(["Modelo","SKU","Qtd","Hardware (R$)","Licença (R$)","Operacional (R$)","Valor Total + Margem (R$)","Valor Mês (R$)","Valor Total + Margem c/ Desc. (R$)","Valor Mês c/ Desc. (R$)","% Desc."]);
+  var sumQty=0, sumHW=0, sumLic=0, sumOpex=0, sumMargem=0, sumValorMes=0, sumMensal=0;
+  results.forEach(function(r){
+    var pct = pctDesc(r.totalComMargem, r.totalMensal);
+    var valorMesDesc = params.prazoMeses>0 ? r.totalMensal/params.prazoMeses : 0;
+    rows.push([r.model.modelo, r.model.sku, r.qty, round2(r.hwTotal), round2(r.licTotalFlat), round2(r.opexTotal), round2(r.totalComMargem), round2(r.valorMes), round2(r.totalMensal), round2(valorMesDesc), round1(pct)]);
+    sumQty+=r.qty; sumHW+=r.hwTotal; sumLic+=r.licTotalFlat; sumOpex+=r.opexTotal; sumMargem+=r.totalComMargem; sumValorMes+=r.valorMes; sumMensal+=r.totalMensal;
+  });
+  var sumValorMesDesc = params.prazoMeses>0 ? sumMensal/params.prazoMeses : 0;
+  rows.push(["Total","",sumQty, round2(sumHW), round2(sumLic), round2(sumOpex), round2(sumMargem), round2(sumValorMes), round2(sumMensal), round2(sumValorMesDesc), round1(pctDesc(sumMargem,sumMensal))]);
+  return rows;
+}
+
+function saveExcel(){
+  var results = computeAll();
+  if(!results.length){ showToast("Adicione ao menos um modelo antes de salvar."); return; }
+  if(results.some(function(r){ return !r.dateOk; })){ showToast("Informe a Data Assin. Contrato antes de salvar a planilha."); return; }
+  if(typeof XLSX === "undefined"){ showToast("Biblioteca de planilha não carregou. Tente novamente."); return; }
+  try{
+    var rows = buildExportRows(results);
+    var ws = XLSX.utils.aoa_to_sheet(rows);
+    ws["!cols"] = [{wch:22},{wch:14},{wch:7},{wch:14},{wch:14},{wch:14},{wch:17},{wch:14},{wch:19},{wch:16},{wch:9}];
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Cotação EA");
+    var d = new Date();
+    var fname = "Simulacao_EA_Fortinet_"+d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0")+"_"+String(d.getHours()).padStart(2,"0")+String(d.getMinutes()).padStart(2,"0")+".xlsx";
+    XLSX.writeFile(wb, fname);
+    showToast("Planilha salva: "+fname);
+  }catch(err){
+    showToast("Falha ao gerar o Excel: "+err.message);
+  }
+}
+
+// ---- Atualizar base de preços (importa TABELA DE PREÇO de um .xlsx/.csv) ----
+function normalizeHeader(s){
+  return String(s==null?"":s).normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase().trim();
+}
+function parseNumCell(v){
+  if(v===null || v===undefined || v==="") return NaN;
+  if(typeof v === "number") return v;
+  var s = String(v).trim();
+  if(/,\d{1,2}$/.test(s) && s.indexOf(".")>-1){ s = s.replace(/\./g,"").replace(",", "."); }
+  else if(s.indexOf(",")>-1 && s.indexOf(".")===-1){ s = s.replace(",", "."); }
+  s = s.replace(/[^0-9.\-]/g,"");
+  return parseFloat(s);
+}
+function findModelSheet(wb){
+  var name = wb.SheetNames.find(function(n){
+    var h = normalizeHeader(n);
+    return h.indexOf("TABELA")>=0 && (h.indexOf("PRECO")>=0 || h.indexOf("PREC")>=0);
+  });
+  return name || wb.SheetNames[0];
+}
+function parseModelsFromWorkbook(wb){
+  var sheetName = findModelSheet(wb);
+  var ws = wb.Sheets[sheetName];
+  var aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
+  var headerRowIdx = -1, col = {};
+  for(var r=0; r<Math.min(aoa.length,20); r++){
+    var row = aoa[r] || [];
+    var found = {};
+    row.forEach(function(cell,c){
+      var h = normalizeHeader(cell);
+      if(!h) return;
+      if(h.indexOf("MODELO")>=0 && found.modelo===undefined) found.modelo=c;
+      else if(h.indexOf("SKU")>=0 && h.indexOf("PRICE")<0 && found.sku===undefined) found.sku=c;
+      else if(h.indexOf("HARDWARE")>=0 && found.hw===undefined) found.hw=c;
+      else if(h.indexOf("PRICE LIST")>=0 && h.indexOf("ATUAL")>=0 && found.licSKU===undefined) found.licSKU=c;
+      else if(h.indexOf("PRICE LIST")>=0 && h.indexOf("EA")>=0 && found.licEA===undefined) found.licEA=c;
+    });
+    if(found.modelo!==undefined && found.hw!==undefined && found.licEA!==undefined && found.licSKU!==undefined){
+      headerRowIdx = r; col = found; break;
+    }
+  }
+  if(headerRowIdx===-1){
+    throw new Error("colunas MODELO, HARDWARE, PRICE LIST (EA) e PRICE LIST ATUAL não encontradas");
+  }
+  var out = [];
+  for(var i=headerRowIdx+1; i<aoa.length; i++){
+    var row = aoa[i] || [];
+    var modelo = row[col.modelo];
+    if(modelo===null || modelo===undefined || String(modelo).trim()==="") continue;
+    var hw = parseNumCell(row[col.hw]);
+    var licEA = parseNumCell(row[col.licEA]);
+    var licSKU = parseNumCell(row[col.licSKU]);
+    if(!isFinite(hw) || !isFinite(licEA) || !isFinite(licSKU)) continue;
+    var sku = col.sku!==undefined ? String(row[col.sku]==null?"":row[col.sku]).trim() : "";
+    out.push({modelo:String(modelo).trim(), sku:sku, hw:hw, licEA:licEA, licSKU:licSKU});
+  }
+  return out;
+}
+function updateBaseBadge(){
+  var badge = document.getElementById("price-badge");
+  if(badge) badge.innerHTML = '<span class="dot"></span>Base atualizada em '+new Date().toLocaleDateString("pt-BR")+' · '+MODELS.length+' modelos';
+}
+function updateBaseFromFile(file){
+  if(typeof XLSX === "undefined"){ showToast("Biblioteca de planilha não carregou. Tente novamente."); return; }
+  var reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      var wb = XLSX.read(new Uint8Array(e.target.result), {type:"array"});
+      var newModels = parseModelsFromWorkbook(wb);
+      if(!newModels.length) throw new Error("nenhum modelo válido encontrado");
+      var missing = items.filter(function(it){ return !newModels.some(function(m){return m.modelo===it.modelo;}); });
+      MODELS = newModels;
+      updateBaseBadge();
+      renderAll();
+      var msg = "Base atualizada: "+MODELS.length+" modelo(s) carregado(s).";
+      if(missing.length) msg += " "+missing.length+" item(ns) da cotação não constam na nova base.";
+      showToast(msg);
+    }catch(err){
+      showToast("Falha ao importar planilha: "+err.message);
+    }
+  };
+  reader.onerror = function(){ showToast("Não foi possível ler o arquivo."); };
+  reader.readAsArrayBuffer(file);
+}
+
+// ---- Tema claro/escuro (persistido no navegador do usuário) ----
+var SUN_ICON = '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2.2M12 19.8V22M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2 12h2.2M19.8 12H22M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+var MOON_ICON = '<svg viewBox="0 0 24 24" fill="none"><path d="M20 14.5A8.5 8.5 0 1110.5 4a6.5 6.5 0 009.5 10.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+function getTheme(){
+  try{ return localStorage.getItem("simulador-ea-theme") || "dark"; }catch(e){ return "dark"; }
+}
+function renderThemeIcon(t){
+  var btn = document.getElementById("btn-theme-toggle");
+  if(!btn) return;
+  btn.innerHTML = t==="dark" ? SUN_ICON : MOON_ICON;
+  btn.title = t==="dark" ? "Mudar para tema claro" : "Mudar para tema escuro";
+}
+function setTheme(t){
+  document.documentElement.setAttribute("data-theme", t);
+  try{ localStorage.setItem("simulador-ea-theme", t); }catch(e){}
+  renderThemeIcon(t);
+}
+
+// event wiring
+["p-dataInstalacao","p-prazo","p-cambio","p-impostos","p-descLicEA","p-descLicSKU","p-descHW","p-opex","p-fimMAI","p-fimEA"].forEach(function(id){
+  document.getElementById(id).addEventListener("input", function(){
+    if(id === "p-descLicEA") enforceDiscountEALimit(this);
+    getParamsFromForm();
+    document.getElementById("p-prazo-echo").textContent = "= " + yearsLabel(params.prazoMeses);
+    renderAll();
+  });
+});
+document.getElementById("p-descLicEA").addEventListener("blur", function(){
+  if(enforceDiscountEALimit(this)){
+    getParamsFromForm();
+    renderAll();
+  }
+});
+
+document.getElementById("discount-farol").addEventListener("click", function(){
+  toggleFarolState();
+});
+document.getElementById("discount-farol").addEventListener("keydown", function(e){
+  if(e.key === "Enter" || e.key === " "){
+    e.preventDefault();
+    toggleFarolState();
+  }
+});
+
+document.getElementById("btn-reset-params").addEventListener("click", function(){
+  params = Object.assign({}, DEFAULT_PARAMS);
+  setFormFromParams();
+  renderAll();
+  showToast("Parâmetros restaurados.");
+});
+
+document.getElementById("btn-add-item").addEventListener("click", function(){
+  items.push({id:uid(), modelo:"", qty:1});
+  renderAll();
+});
+
+document.getElementById("btn-save-excel").addEventListener("click", saveExcel);
+
+document.getElementById("btn-update-base").addEventListener("click", function(){
+  document.getElementById("file-import-base").click();
+});
+document.getElementById("file-import-base").addEventListener("change", function(e){
+  var f = e.target.files && e.target.files[0];
+  if(f) updateBaseFromFile(f);
+  e.target.value = "";
+});
+
+document.getElementById("btn-theme-toggle").addEventListener("click", function(){
+  var current = document.documentElement.getAttribute("data-theme") || "dark";
+  setTheme(current==="dark" ? "light" : "dark");
+});
+
+document.getElementById("items-tbody").addEventListener("change", function(e){
+  var t = e.target;
+  var id = t.getAttribute("data-id");
+  if(!id) return;
+  var item = items.find(function(i){return i.id===id;});
+  if(!item) return;
+  if(t.classList.contains("qty-input")){ item.qty = Math.max(1, parseInt(t.value,10)||1); renderAll(); }
+});
+
+document.getElementById("items-tbody").addEventListener("click", function(e){
+  var btn = e.target.closest(".remove-item");
+  if(!btn) return;
+  var id = btn.getAttribute("data-id");
+  items = items.filter(function(i){return i.id!==id;});
+  renderAll();
+});
+
+// combobox: focus/blur (capture, since these don't bubble) + input + keydown
+var itemsTbodyEl = document.getElementById("items-tbody");
+itemsTbodyEl.addEventListener("focus", function(e){
+  var t = e.target;
+  if(!t.classList || !t.classList.contains("combo-input")) return;
+  openCombo(t.getAttribute("data-id"), t);
+  t.select();
+}, true);
+
+itemsTbodyEl.addEventListener("blur", function(e){
+  var t = e.target;
+  if(!t.classList || !t.classList.contains("combo-input")) return;
+  setTimeout(closeCombo, 120);
+}, true);
+
+itemsTbodyEl.addEventListener("input", function(e){
+  var t = e.target;
+  if(!t.classList.contains("combo-input")) return;
+  combo.filtered = filterModels(t.value);
+  combo.activeIndex = combo.filtered.length ? 0 : -1;
+  renderComboPanel();
+  positionCombo(t);
+});
+
+itemsTbodyEl.addEventListener("keydown", function(e){
+  var t = e.target;
+  if(!t.classList.contains("combo-input")) return;
+  if(e.key==="ArrowDown"){
+    e.preventDefault();
+    if(combo.filtered.length){ combo.activeIndex = (combo.activeIndex+1) % combo.filtered.length; renderComboPanel(); }
+  } else if(e.key==="ArrowUp"){
+    e.preventDefault();
+    if(combo.filtered.length){ combo.activeIndex = (combo.activeIndex-1+combo.filtered.length) % combo.filtered.length; renderComboPanel(); }
+  } else if(e.key==="Enter"){
+    e.preventDefault();
+    if(combo.activeIndex>=0 && combo.filtered[combo.activeIndex]){ selectCombo(combo.filtered[combo.activeIndex].modelo); }
+  } else if(e.key==="Escape"){
+    t.blur(); closeCombo();
+  }
+});
+
+comboPanelEl().addEventListener("mousedown", function(e){
+  var opt = e.target.closest(".combo-opt");
+  if(!opt) return;
+  e.preventDefault();
+  selectCombo(opt.getAttribute("data-modelo"));
+});
+
+window.addEventListener("resize", function(){
+  if(combo.openId){
+    var el = document.querySelector('.combo-input[data-id="'+combo.openId+'"]');
+    if(el) positionCombo(el); else closeCombo();
+  }
+});
+window.addEventListener("scroll", function(e){
+  if(!combo.openId) return;
+  if(e.target === comboPanelEl() || (e.target.nodeType===1 && comboPanelEl().contains(e.target))) return;
+  closeCombo();
+}, true);
+
+document.getElementById("schedule-picker").addEventListener("change", function(e){
+  scheduleView = e.target.value;
+  renderSchedule(computeAll());
+});
+
+// help tooltips
+var tooltipPop = document.getElementById("tooltip-pop");
+document.querySelectorAll(".hint").forEach(function(el){
+  el.addEventListener("mouseenter", function(){
+    var tip = el.getAttribute("data-tip");
+    tooltipPop.textContent = tip;
+    var r = el.getBoundingClientRect();
+    tooltipPop.style.left = Math.min(window.innerWidth-270, Math.max(10,r.left-120))+"px";
+    tooltipPop.style.top = (r.bottom+8)+"px";
+    tooltipPop.classList.add("show");
+  });
+  el.addEventListener("mouseleave", function(){ tooltipPop.classList.remove("show"); });
+});
+
+// boot
+renderThemeIcon(getTheme());
+setFormFromParams();
+renderAll();
+
+})();
+</script>
